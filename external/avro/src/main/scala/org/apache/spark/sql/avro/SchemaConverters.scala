@@ -18,6 +18,7 @@
 package org.apache.spark.sql.avro
 
 import scala.collection.JavaConverters._
+import scala.math.min
 import scala.util.Random
 
 import org.apache.avro.{LogicalTypes, Schema, SchemaBuilder}
@@ -57,7 +58,8 @@ object SchemaConverters {
       case BYTES | FIXED => avroSchema.getLogicalType match {
         // For FIXED type, if the precision requires more bytes than fixed size, the logical
         // type will be null, which is handled by Avro library.
-        case d: Decimal => SchemaType(DecimalType(d.getPrecision, d.getScale), nullable = false)
+        case d: Decimal => SchemaType(DecimalType(min(d.getPrecision, DecimalType.MAX_PRECISION),
+          min(d.getScale, DecimalType.MAX_SCALE)), nullable = false)
         case _ => SchemaType(BinaryType, nullable = false)
       }
 
